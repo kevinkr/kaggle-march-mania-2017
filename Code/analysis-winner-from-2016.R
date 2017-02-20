@@ -28,7 +28,9 @@ TourneyDetailedResults <- fread("Data/TourneyDetailedResults.csv")
 TourneyCompactResults <- fread("Data/TourneyCompactResults.csv")
 RegularSeasonDetailedResults <- fread("Data/RegularSeasonDetailedResults.csv")
 RegularSeasonCompactResults <- fread("Data/RegularSeasonCompactResults.csv")
+
 # KenPom <- fread("Data/KenPom.csv")
+
 TeamSpelling <- fread("Data/TeamSpellings.csv")
 ################################################################################
 # Preproces data
@@ -46,12 +48,15 @@ TourneySeeds <- TourneySeeds %>%
 # mamp spelling
 # KenPom = left_join(KenPom, TeamSpelling, by=c('Team'='Team'))
 
+
 ################################################################################
 # Construct summary data
 
 winner_Tdata = select(RegularSeasonDetailedResults, Season, Wteam, Wscore, Wfgm:Wpf)
 loser_Tdata = select(RegularSeasonDetailedResults, Season, Lteam, Lscore, Lfgm:Lpf)
+
 # combining winner and loser data
+
 Team_Game_History = rbind(winner_Tdata, setNames(loser_Tdata, names(winner_Tdata)))
 colnames(Team_Game_History) = c("season",
                                 "team",
@@ -90,7 +95,6 @@ colnames(team2_data_by_season) <- paste("team2", colnames(team2_data_by_season),
 # team2_kenpom_data_by_season = data.frame(KenPom)
 # colnames(team2_kenpom_data_by_season) <- paste("team2", colnames(team2_kenpom_data_by_season), sep = "_")
 
-
 ################################################################################
 # Get going with actual machine learning:
 # 1. set train,test,predict
@@ -105,7 +109,9 @@ games.to.train <- RegularSeasonDetailedResults %>%
 games.to.test <- TourneyDetailedResults %>%
                   mutate(season=Season, team1=Wteam, team2=Lteam, Score_diff=Wscore-Lscore, team1win=1) %>%
                   select(season, team1, team2, Score_diff, team1win)
+
 games.to.predict <- cbind(SampleSubmission$id, colsplit(SampleSubmission$id, split = "_", names = c('season', 'team1', 'team2')))
+
 
 flippedGames = function(game){
   flipped <- game %>%
@@ -127,10 +133,12 @@ addDataToGames = function(games) {
           mutate(team1seed = as.numeric(team1seed), team2seed = as.numeric(team2seed)) %>%
           # add seasonal data
           left_join(team1_data_by_season,by=c("season" = "team1_season", "team1"="team1_team")) %>%
+
           left_join(team2_data_by_season,by=c("season" = "team2_season", "team2"="team2_team")) #%>%
           # add external data
           #left_join(team1_kenpom_data_by_season,by=c("season" = "team1_Year", "team1"="team1_team_id")) %>%
           #left_join(team2_kenpom_data_by_season,by=c("season" = "team2_Year", "team2"="team2_team_id"))
+
   return(games)
 
 }
@@ -141,6 +149,7 @@ games.to.predict = addDataToGames(games.to.predict)
 
 games.to.train = games.to.train %>% na.omit()
 games.to.test = games.to.test %>% na.omit()
+
 
 # getMissing = function(){
 #   a=Teams$Team_Name[which(Teams$Team_Id %in% unique(games.to.test$team2[which(is.na(games.to.test$team2_Team))]))]
@@ -153,6 +162,7 @@ games.to.test = games.to.test %>% na.omit()
 #   print(missing)
 #   return(missing)
 # }
+
 
 m.score_diff <- lm(Score_diff~ .,
                    data=select(games.to.train,
@@ -181,5 +191,7 @@ getLogLoss(games.to.train)
 
 getLogLoss(games.to.test)
 
+
 write.csv(games.to.predict %>% select(id=SampleSubmission.id, Pred), 
           'Submissions/previous_winner_seed_submission-2-18-17.csv', row.names=FALSE)
+
