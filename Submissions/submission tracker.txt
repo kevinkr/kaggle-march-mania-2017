@@ -1,0 +1,21 @@
+v1 - original - 
+> getLogLoss(games.to.train)
+[1] 0.5973745
+> getLogLoss(games.to.test)
+[1] 0.5456828
+PL 0.565717
+
+v2 - train on seasons > 2008
+> getLogLoss(games.to.train)
+[1] 0.5937966
+> getLogLoss(games.to.test)
+[1] 0.567389
+PL 0.564152
+
+v3 - include season results greater than daynum = 40
+> getLogLoss(games.to.train)
+[1] 0.6204198 
+> getLogLoss(games.to.test)
+[1] 0.5753276
+PL  0.573215
+
